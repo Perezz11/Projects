@@ -589,7 +589,6 @@ while game_status == True:
         
         # Si no hay jaque, aplicar el movimiento al tablero real
         pieza.mover_pieza(pos_inicial, pos_final, tablero)
-        imprimir_tablero(tablero)
         
         if turno == "blanco":
             if hay_jaque(pos_rey_blanco, pos_rey_negro, "negro", tablero):
