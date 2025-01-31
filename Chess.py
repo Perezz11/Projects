@@ -136,6 +136,37 @@ def es_jaque_mate(pos_rey_blanco, pos_rey_negro, turno, tablero):
     return True
 
 
+def tablas(tablero):
+    # Piezas del jugador blanco
+    piezas_jugador_blanco = [
+    (pieza, (x, y)) 
+    for x, fila in enumerate(tablero) 
+    for y, pieza in enumerate(fila) 
+    if isinstance(pieza, Pieza) and pieza.color == "blanco"
+    ]
+    
+    # Piezas del jugador negro
+    piezas_jugador_negro = [
+    (pieza, (x, y)) 
+    for x, fila in enumerate(tablero) 
+    for y, pieza in enumerate(fila) 
+    if isinstance(pieza, Pieza) and pieza.color == "negro"
+    ]
+    
+    lista_piezas_blancas = [type(pieza[0]).__name__ for pieza in piezas_jugador_blanco ]
+    lista_piezas_negras = [type(pieza[0]).__name__ for pieza in piezas_jugador_negro]
+    
+        # Solo reyes
+    if len(lista_piezas_blancas) == 1 and len(lista_piezas_negras) == 1:
+        return True
+    
+    # Rey y caballo vs rey son tablas
+    # Rey y alfil vs rey no son realmente tablas, pero muy mal tienes que jugar para perder
+    if ((set(lista_piezas_blancas) <= {"Rey", "Caballo"} or set(lista_piezas_blancas) <= {"Rey", "Alfil"}) and set(lista_piezas_negras) <= {"Rey"}) or \
+        (set(lista_piezas_blancas) <= {"Rey"} and (set(lista_piezas_negras) <= {"Rey", "Caballo"} or set(lista_piezas_negras) <= {"Rey", "Alfil"})):
+        return True
+
+
 class Pieza:
     def __init__(self, color):
         self.color = color
@@ -417,14 +448,33 @@ class Rey(Pieza):
         fila_ini, col_ini = pos_inicial
         fila_fin, col_fin = pos_final
         
-        if not (abs(fila_fin - fila_ini) <= 1 and abs(col_fin - col_ini) <= 1):
-            log_debug("Movimiento NO válido: Así no se mueve el Rey")
-            return False
-        
         # Si hay una pieza del mismo color
         if tablero[fila_fin][col_fin] != " " and tablero[fila_fin][col_fin].color == self.color:
             log_debug("Movimiento NO válido: Hay una pieza del mismo color")
             return False
+
+        # ENROQUE
+        fila = 0 if turno == "blanco" else 7
+        
+        if pos_inicial == (fila,4) and pos_final == (fila,2) and (isinstance(tablero[fila][0], Torre) and tablero[fila][0].color == turno):
+            if all(not hay_jaque((fila,col), pos_rey_negro, turno, tablero) for col in [2, 3, 4]):
+                tablero[fila][0] = " "
+                tablero[fila][3] = Torre(turno)
+                print("Enrque Largo")
+                return True
+            
+        # Enroque corto
+        if pos_inicial == (fila,4) and pos_final == (fila,6) and (isinstance(tablero[fila][7], Torre) and tablero[fila][7].color == turno):
+            if all(not hay_jaque((fila,col), pos_rey_negro, turno, tablero) for col in [4, 5, 6]):
+                tablero[fila][7] = " "
+                tablero[fila][5] = Torre(turno)
+                print("Enroque Corto")
+                return True
+        
+        # Movimiento normal del rey
+        if not (abs(fila_fin - fila_ini) <= 1 and abs(col_fin - col_ini) <= 1):
+            log_debug("Movimiento NO válido: Así no se mueve el Rey")
+            return False        
         
         return True
     
